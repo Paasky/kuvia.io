@@ -10,9 +10,9 @@ use Illuminate\Support\Str;
 class ImageManager
 {
 
-    public static function create(string $pathToUFile, Collage $collage, Uploader $uploader): Image
+    public static function create(string $pathToFile, Collage $collage, Uploader $uploader): Image
     {
-        $extension = pathinfo($pathToUFile, PATHINFO_EXTENSION);
+        $extension = pathinfo($pathToFile, PATHINFO_EXTENSION);
         $filename = Str::uuid()->toString() . ".{$extension}";
         $image = new Image([
             'uploader_id' => $uploader->id,
