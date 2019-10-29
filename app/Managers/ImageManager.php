@@ -4,13 +4,23 @@ namespace App\Managers;
 
 use App\Models\Collage;
 use App\Models\Image;
-use App\User;
+use App\Models\Uploader;
+use Illuminate\Support\Str;
 
 class ImageManager
 {
-    public static function create(array $params): User
-    {
 
+    public static function create(string $pathToUFile, Collage $collage, Uploader $uploader): Image
+    {
+        $extension = pathinfo($pathToUFile, PATHINFO_EXTENSION);
+        $filename = Str::uuid()->toString() . ".{$extension}";
+        $image = new Image([
+            'uploader_id' => $uploader->id,
+            'collage_id' => $collage->id,
+            'filename' => $filename,
+        ]);
+
+        return $image;
     }
 
     public static function approve(Image &$image): void
