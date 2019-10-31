@@ -26,19 +26,36 @@ abstract class TestCase extends BaseTestCase
         return User::create($attributes);
     }
 
-    public function imageAttributes(string $title = 'Test Image'): array
+    public function imageAttributes(Collage $collage = null, string $filename = ''): array
     {
         return [
-            'uploader_id' => $uploader->id,
-            'collage_id' => $collage->id,
-            'filename' => $filename,
-            'user_id' => $user ? $user->id ? null,
+            'collage_id' => $collage ? $collage->id : $this->collage()->id,
+            'filename' => $filename ?: 'test.jpg',
         ];
     }
 
-    public function image(array $attributes = []): Image
+    /**
+     * @param Uploader|User|null $uploaderOrUser
+     * @param array $attributes
+     * @return Image
+     */
+    public function image($uploaderOrUser = null, array $attributes = []): Image
     {
+        if ($uploaderOrUser instanceof Uploader) {
+            $uploader = $uploaderOrUser;
+        } else {
+            $uploader = $this->uploader();
+        }
+
+        if ($uploaderOrUser instanceof User) {
+            $user = $uploaderOrUser;
+        } else {
+            $user = null;
+        }
+
         $attributes = $attributes ?: $this->imageAttributes();
+        $attributes['uploader_id'] = $uploader->id;
+        $attributes['user_id'] = $user ? $user->id : null;
         return Image::create($attributes);
     }
 

@@ -8,27 +8,27 @@ use Illuminate\Pagination\Paginator;
 
 class CollageManager
 {
-    public static function create(User $user, array $params): User
+    public static function create(array $params, User $user = null): User
     {
 
     }
 
-    public static function show(User $user, Collage $collage): ?Collage
+    public static function show(Collage $collage, User $user = null): ?Collage
     {
 
     }
 
-    public static function list(User $user, array $params = []): Paginator
+    public static function list(array $params = [], User $user = null): Paginator
     {
 
     }
 
-    public static function disable(User $user, Collage &$collage): void
+    public static function disable(Collage &$collage, User $user): void
     {
 
     }
 
-    public static function delete(User $user, Collage $collage): void
+    public static function delete(Collage $collage, User $user): void
     {
 
     }
