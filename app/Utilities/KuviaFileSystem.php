@@ -2,30 +2,24 @@
 
 namespace App\Utilities;
 
+use Illuminate\Filesystem\Filesystem;
 use League\Flysystem\FileExistsException;
 use Symfony\Component\Finder\Exception\DirectoryNotFoundException;
 
 class KuviaFileSystem
 {
-    /** @var \Illuminate\Filesystem\Filesystem */
+    /** @var Filesystem */
     private $fs;
 
     public function __construct()
     {
-        $this->fs = new \Illuminate\Filesystem\Filesystem();
+        $this->fs = new Filesystem();
     }
 
-    public function exists(string $path): bool
+    public function get(string $path): string
     {
-        return is_dir($path) || is_file($path);
-    }
-
-    public function mustExist(string $path): self
-    {
-        if (!$this->exists($path)) {
-            throw new DirectoryNotFoundException("Requested directory `{$path}` does not exist");
-        }
-        return $this;
+        $this->mustExist($path);
+        return $this->fs->get($path);
     }
 
     public function move(string $from, string $to, bool $overwrite = false, bool $createPathIfDoesntExist = true): self
@@ -34,8 +28,8 @@ class KuviaFileSystem
 
         if ($createPathIfDoesntExist) {
             $path = dirname($to);
-            if (!is_dir($path)) {
-                mkdir($path);
+            if (!$this->fs->isDirectory($path)) {
+                $this->fs->makeDirectory($path);
             }
         }
 
@@ -48,6 +42,19 @@ class KuviaFileSystem
         }
         $this->fs->move($from, $to);
         return $this;
+    }
+
+    public function mustExist(string $path): self
+    {
+        if (!$this->exists($path)) {
+            throw new DirectoryNotFoundException("Requested directory `{$path}` does not exist");
+        }
+        return $this;
+    }
+
+    public function exists(string $path): bool
+    {
+        return $this->fs->isDirectory($path) || $this->fs->isFile($path);
     }
 
     public function delete(string $path, bool $mustExist = true): self

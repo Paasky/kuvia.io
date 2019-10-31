@@ -3,19 +3,15 @@
 namespace Tests\Unit;
 
 use App\Managers\UserManager;
-use App\User;
-use Tests\Data\UserData;
 use Tests\TestCase;
 
 class UserTest extends TestCase
 {
-    use UserData;
-
     public function testCanRegister()
     {
-        self::startTransaction();
+        self::beginTransaction();
         try {
-            $user = UserManager::create($this->userParams(
+            $user = UserManager::create($this->userAttributes(
                 'asda@gmail.com'
             ));
             $this->assertEquals('asda@gmail.com', $user->email, 'User email matches');
@@ -26,9 +22,9 @@ class UserTest extends TestCase
 
     public function testCanActivate()
     {
-        self::startTransaction();
+        self::beginTransaction();
         try {
-            $user = UserManager::create($this->userParams());
+            $user = UserManager::create($this->userAttributes());
             UserManager::activate($user);
             $this->assertEquals(true, $user->is_active, 'User is activated');
         } finally {
@@ -38,7 +34,7 @@ class UserTest extends TestCase
 
     public function testCanSocialRegister()
     {
-        self::startTransaction();
+        self::beginTransaction();
         try {
 
         } finally {
@@ -48,7 +44,7 @@ class UserTest extends TestCase
 
     public function testCanSocialLogin()
     {
-        self::startTransaction();
+        self::beginTransaction();
         try {
 
         } finally {

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 trait ManagesDbTransactions
 {
-    public static function startTransaction(): void
+    public static function beginTransaction(): void
     {
         DB::beginTransaction();
     }

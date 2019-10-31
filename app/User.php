@@ -3,15 +3,20 @@
 namespace App;
 
 use Cog\Laravel\Ban\Traits\Bannable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use Spatie\Permission\Traits\HasPermissions;
+use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @mixin \Eloquent
+ * @property int $id
+ */
 class User extends Authenticatable implements AuditableContract
 {
-    use Notifiable, Auditable, Bannable;
+    use Notifiable, Auditable, Bannable, HasPermissions, HasRoles;
 
     /**
      * The attributes that are mass assignable.
