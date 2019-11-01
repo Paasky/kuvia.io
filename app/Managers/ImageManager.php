@@ -74,27 +74,27 @@ class ImageManager
 
     /**
      * @param Image $image
-     * @param Uploader|User|null $uploaderOrUser
+     * @param User|null $user
      */
-    public static function approve(Image &$image, $uploaderOrUser = null): void
+    public static function approve(Image &$image, User $user = null): void
     {
         $image->markApproved();
     }
 
     /**
      * @param Image $image
-     * @param Uploader|User|null $uploaderOrUser
+     * @param User|null $user
      */
-    public static function decline(Image &$image, $uploaderOrUser = null): void
+    public static function decline(Image &$image, User $user = null): void
     {
         $image->markRejected();
     }
 
     /**
      * @param Image $image
-     * @param Uploader|User|null $uploaderOrUser
+     * @param User|null $user
      */
-    public static function delete(Image $image, $uploaderOrUser = null): void
+    public static function delete(Image $image, User $user = null): void
     {
         KuviaFileSystem::delete(Paths::image($image));
     }
