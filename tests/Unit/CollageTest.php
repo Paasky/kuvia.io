@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Constants\ConstUser;
 use App\Managers\CollageManager;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
@@ -65,6 +66,7 @@ class CollageTest extends TestCase
 
             // Admin can see anyone's collages
             $user->assignRole(ConstUser::ROLE_ADMIN);
+            $shownCollages = CollageManager::list([], $user);
             $this->assertEquals(3, count($shownCollages->items()), "Admin can see any user's collages");
         } finally {
             self::rollbackTransaction();
@@ -83,7 +85,7 @@ class CollageTest extends TestCase
             // Can't delete other user's collage
             $otherUser = $this->user();
             $otherUsersCollage = $this->collage($otherUser);
-            static::expectExceptionObject(new NotFoundHttpException('Collage not found'));
+            static::expectExceptionObject(new UnauthorizedException(401,'You are not allowed to do this'));
             CollageManager::delete($otherUsersCollage, $user);
 
             // admin can delete anyone's collage

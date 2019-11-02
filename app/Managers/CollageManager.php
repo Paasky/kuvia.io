@@ -8,7 +8,7 @@ use Illuminate\Pagination\Paginator;
 
 class CollageManager
 {
-    public static function create(array $params, User $user = null): User
+    public static function create(array $params, User $user = null): Collage
     {
 
     }

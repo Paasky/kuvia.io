@@ -3,13 +3,11 @@
 namespace Tests\Feature;
 
 use App\Constants\ConstUser;
-use App\Managers\CollageManager;
 use App\Managers\ImageManager;
 use App\Traits\ManagesDbTransactions;
 use App\Utilities\KuviaFileSystem;
 use App\Utilities\Paths;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Exceptions\UnauthorizedException;
 use Tests\TestCase;
 
@@ -29,6 +27,37 @@ class UploadingTest extends TestCase
 
             $this->assertEquals(Carbon::now()->toDateString(), $image->approved_at->toDateString(), 'Image was approved today');
             $this->assertEquals(1, count($collage->images), 'Collage has one image');
+            $this->assertEquals($image->id, $collage->images[0]->id, 'Image ID matches');
+
+            KuviaFileSystem::delete(Paths::image($image));
+        } finally {
+            self::rollbackTransaction();
+        }
+    }
+
+    public function testCreateThenUploadThenApproveThenDeclineThenApprove()
+    {
+        self::beginTransaction();
+        try {
+            $collage = $this->collage();
+            $imagePath = $this->imagePath();
+            $uploader = $this->uploader();
+            $image = ImageManager::create($imagePath, $collage, $uploader);
+
+            ImageManager::approve($image, $collage->user);
+            $this->assertEquals(Carbon::now()->toDateString(), $image->approved_at->toDateString(), 'Image was approved today');
+            $this->assertEquals(1, $collage->images()->count(), 'Collage has one image');
+            $this->assertEquals($image->id, $collage->images[0]->id, 'Image ID matches');
+
+            ImageManager::decline($image, $collage->user);
+            $this->assertEquals(Carbon::now()->toDateString(), $image->declined_at->toDateString(), 'Image was declined today');
+            $this->assertNull($image->approved_at, 'Image is no longer approved');
+            $this->assertEquals(0, $collage->images()->count(), 'Collage has no images');
+
+            ImageManager::approve($image, $collage->user);
+            $this->assertEquals(Carbon::now()->toDateString(), $image->approved_at->toDateString(), 'Image 1 was approved today');
+            $this->assertNull($image->declined_at, 'Image is no longer declined');
+            $this->assertEquals(1, $collage->images()->count(), 'Collage has one image');
             $this->assertEquals($image->id, $collage->images[0]->id, 'Image ID matches');
 
             KuviaFileSystem::delete(Paths::image($image));

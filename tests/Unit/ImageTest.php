@@ -6,6 +6,7 @@ use App\Constants\ConstUser;
 use App\Managers\ImageManager;
 use App\Utilities\KuviaFileSystem;
 use App\Utilities\Paths;
+use Spatie\Permission\Exceptions\UnauthorizedException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
@@ -157,7 +158,7 @@ class ImageTest extends TestCase
             // Can't delete other uploader's image
             $otherUploader = $this->uploader();
             $otherUploadersImage = $this->image($otherUploader);
-            static::expectExceptionObject(new NotFoundHttpException('Image not found'));
+            static::expectExceptionObject(new UnauthorizedException(401,'You are not allowed to do this'));
             ImageManager::delete($otherUploadersImage, $uploader);
 
             // admin can delete anyone's image
@@ -181,7 +182,7 @@ class ImageTest extends TestCase
             // Can't delete other user's image
             $otherUser = $this->user();
             $otherUsersImage = $this->image($otherUser);
-            static::expectExceptionObject(new NotFoundHttpException('Image not found'));
+            static::expectExceptionObject(new UnauthorizedException(401,'You are not allowed to do this'));
             ImageManager::delete($otherUsersImage, $user);
 
             // admin can delete anyone's image

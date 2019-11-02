@@ -92,9 +92,9 @@ class ImageManager
 
     /**
      * @param Image $image
-     * @param User|null $user
+     * @param Uploader|User|null $uploaderOrUser
      */
-    public static function delete(Image $image, User $user = null): void
+    public static function delete(Image $image, $uploaderOrUser = null): void
     {
         KuviaFileSystem::delete(Paths::image($image));
     }

@@ -19,36 +19,4 @@ class UserTest extends TestCase
             self::rollbackTransaction();
         }
     }
-
-    public function testCanActivate()
-    {
-        self::beginTransaction();
-        try {
-            $user = UserManager::create($this->userAttributes());
-            UserManager::activate($user);
-            $this->assertEquals(true, $user->is_active, 'User is activated');
-        } finally {
-            self::rollbackTransaction();
-        }
-    }
-
-    public function testCanSocialRegister()
-    {
-        self::beginTransaction();
-        try {
-
-        } finally {
-            self::rollbackTransaction();
-        }
-    }
-
-    public function testCanSocialLogin()
-    {
-        self::beginTransaction();
-        try {
-
-        } finally {
-            self::rollbackTransaction();
-        }
-    }
 }
