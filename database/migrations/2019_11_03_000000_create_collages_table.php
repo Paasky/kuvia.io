@@ -17,7 +17,7 @@ class CreateCollagesTable extends Migration
             $table->string('title', 255);
             $table->string('slug', 255)->unique()->index('slug');
             $table->string('shortcode', 8)->unique()->index('shortcode');
-            $table->bigInteger('user_id')->unsigned()->nullable()->index('user_id');
+            $table->bigInteger('user_id')->unsigned()->index('user_id');
             $table->boolean('is_auto_approve');
 
             $table->smallInteger('status')->unsigned()->nullable()->index('status');

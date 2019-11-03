@@ -2,44 +2,48 @@
 
 namespace Tests;
 
+use App\Managers\CollageManager;
 use App\Models\Collage;
 use App\Models\Image;
 use App\Models\Uploader;
 use App\Traits\ManagesDbTransactions;
 use App\User;
+use Faker\Generator;
+use Faker\Provider\Internet;
+use Faker\Provider\Person;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication, ManagesDbTransactions;
 
-    public function userAttributes(string $email = 'test@test.com'): array
+    public function user(): User
     {
+        return User::create($this->userAttributes());
+    }
+
+    public function userAttributes(string $email = '', string $password = 'test'): array
+    {
+        if (!$email) {
+            $i = 0;
+            do {
+                $email = 'test' . ($i ?: '') . '@kuvia.io';
+                $i++;
+            } while (User::where('email', $email)->exists());
+        }
         return [
+            'name' => Person::firstNameMale(),
             'email' => $email,
-        ];
-    }
-
-    public function user(array $attributes = []): User
-    {
-        $attributes = $attributes ?: $this->userAttributes();
-        return User::create($attributes);
-    }
-
-    public function imageAttributes(Collage $collage = null, string $filename = ''): array
-    {
-        return [
-            'collage_id' => $collage ? $collage->id : $this->collage()->id,
-            'filename' => $filename ?: 'test.jpg',
+            'password' => bcrypt($password),
         ];
     }
 
     /**
+     * @param Collage|null $collage
      * @param Uploader|User|null $uploaderOrUser
-     * @param array $attributes
      * @return Image
      */
-    public function image($uploaderOrUser = null, array $attributes = []): Image
+    public function image(Collage $collage = null, $uploaderOrUser = null): Image
     {
         if ($uploaderOrUser instanceof Uploader) {
             $uploader = $uploaderOrUser;
@@ -53,10 +57,18 @@ abstract class TestCase extends BaseTestCase
             $user = null;
         }
 
-        $attributes = $attributes ?: $this->imageAttributes();
-        $attributes['uploader_id'] = $uploader->id;
-        $attributes['user_id'] = $user ? $user->id : null;
-        return Image::create($attributes);
+        return Image::create($this->imageAttributes($collage, $uploader, $user));
+    }
+
+    public function imageAttributes(Collage $collage = null, Uploader $uploader = null, User $user = null, string $filename = ''): array
+    {
+        return [
+            'filename' => $filename ?: 'test.jpg',
+            'file_hash' => md5('test'),
+            'uploader_id' => $uploader ? $uploader->id : $this->uploader()->id,
+            'user_id' => $user ? $user->id : null,
+            'collage_id' => $collage ? $collage->id : $this->collage()->id,
+        ];
     }
 
     public function imagePath(): string
@@ -64,25 +76,19 @@ abstract class TestCase extends BaseTestCase
         return base_path('tests/Data/test.jpg');
     }
 
-    public function collageAttributes(string $title = 'Test Collage'): array
+    public function collage(User $user = null): Collage
+    {
+        return Collage::create($this->collageAttributes($user));
+    }
+
+    public function collageAttributes(User $user = null, string $title = 'Test Collage', bool $isAutoApprove = false): array
     {
         return [
             'title' => $title,
-        ];
-    }
-
-    public function collage(User $user = null, array $attributes = []): Collage
-    {
-        $user = $user ?: $this->user();
-        $attributes = $attributes ?: $this->collageAttributes();
-        $attributes['user_id'] = $user->id;
-        return Collage::create($attributes);
-    }
-
-    public function uploaderAttributes(User $user = null): array
-    {
-        return [
-            'user_id' => $user ? $user->id : null,
+            'slug' => CollageManager::generateSlug($title),
+            'shortcode' => CollageManager::generateShortcode(),
+            'user_id' => $user ? $user->id : $this->user()->id,
+            'is_auto_approve' => $isAutoApprove
         ];
     }
 
@@ -90,5 +96,12 @@ abstract class TestCase extends BaseTestCase
     {
         $attributes = $attributes ?: $this->uploaderAttributes();
         return Uploader::create($attributes);
+    }
+
+    public function uploaderAttributes(User $user = null): array
+    {
+        return [
+            'user_id' => $user ? $user->id : null,
+        ];
     }
 }

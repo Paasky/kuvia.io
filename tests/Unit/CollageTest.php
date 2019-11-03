@@ -15,7 +15,7 @@ class CollageTest extends TestCase
         self::beginTransaction();
         try {
             $user = $this->user();
-            $collage = CollageManager::create($this->collageAttributes('Test Title'), $user);
+            $collage = CollageManager::create($this->collageAttributes($user, 'Test Title'), $user);
             $this::assertEquals($collage->title, 'Test Title', 'Collage title');
             $this::assertEquals($collage->user_id, $user->id, 'Collage owner id');
         } finally {
