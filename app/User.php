@@ -5,6 +5,7 @@ namespace App;
 use App\Models\Collage;
 use App\Models\Image;
 use App\Models\Uploader;
+use App\Traits\CanBeBanned;
 use Carbon\Carbon;
 use Cog\Laravel\Ban\Traits\Bannable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,26 +15,23 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use OwenIt\Auditing\Auditable;
 use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
+use OwenIt\Auditing\Redactors\LeftRedactor;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
  * @mixin \Eloquent
- * @property int $id
  * @property string $name
  * @property string $email
+ * @property Carbon $email_verified_at
  * @property string $password
  * @property string $remember_token
- * @property Carbon $email_verified_at
- * @property int $banned_by
- * @property Carbon $banned_at
  *
  * @property-read string[]|Collection $upload_ips
  * @property-read string[]|Collection $upload_user_agents
  *
  * @property-read Collage[]|Collection $collages
  * @property-read Image[]|Collection $images
- * @property-read User $bannedBy
  * @property-read User[]|Collection $bannedUsers
  * @property-read Uploader[]|Collection $uploaders
  * @property-read Uploader[]|Collection $bannedUploaders
@@ -42,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable implements AuditableContract
 {
-    use Notifiable, Auditable, Bannable, HasPermissions, HasRoles;
+    use Notifiable, Auditable, CanBeBanned, HasPermissions, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -71,6 +69,11 @@ class User extends Authenticatable implements AuditableContract
         'email_verified_at' => 'datetime',
     ];
 
+    protected $attributeModifiers = [
+        'password' => LeftRedactor::class,
+        'remember_token' => LeftRedactor::class,
+    ];
+
     public function collages(): HasMany
     {
         return $this->hasMany(Collage::class);
@@ -84,11 +87,6 @@ class User extends Authenticatable implements AuditableContract
     public function uploaders(): HasMany
     {
         return $this->hasMany(Uploader::class);
-    }
-
-    public function bannedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'banned_by');
     }
 
     public function bannedUsers(): HasMany

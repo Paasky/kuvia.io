@@ -35,7 +35,7 @@ class ImageManager
 
         KuviaFileSystem::move($pathToFile, Paths::images($collage, $filename));
 
-        if ($collage->auto_approve) {
+        if ($collage->is_auto_approve) {
             static::approve($image);
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CanBeBanned;
 use App\User;
 use Carbon\Carbon;
 use Cog\Laravel\Ban\Traits\Bannable;
@@ -13,19 +14,16 @@ use Illuminate\Support\Collection;
  * @property string $ip
  * @property string $user_agent
  * @property int $user_id
- * @property int $banned_by
- * @property Carbon $banned_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
  *
  * @property-read User $user
- * @property-read User $bannedBy
  * @property-read Image[]|Collection $images
  */
 class Uploader extends KuviaModel
 {
-    use Bannable;
+    use CanBeBanned;
 
     protected $fillable = [
         'ip',

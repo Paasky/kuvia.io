@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\CanBeModerated;
 use App\User;
 use Carbon\Carbon;
 use Hootlex\Moderation\Moderatable;
@@ -9,12 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property string $filename
+ * @property string $file_hash
  * @property int $uploader_id
  * @property int $user_id
  * @property int $collage_id
- * @property int $status
- * @property int $moderated_by
- * @property Carbon $moderated_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
@@ -22,11 +21,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Uploader $uploader
  * @property-read User $user
  * @property-read Collage $collage
- * @property-read User $moderatedBy
  */
 class Image extends KuviaModel
 {
-    use Moderatable;
+    use CanBeModerated;
 
     protected $fillable = [
         'filename',
@@ -49,10 +47,5 @@ class Image extends KuviaModel
     public function collage(): BelongsTo
     {
         return $this->belongsTo(Collage::class);
-    }
-
-    public function moderatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'moderated_by');
     }
 }
