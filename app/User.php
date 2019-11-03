@@ -40,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  */
 class User extends Authenticatable implements AuditableContract
 {
-    use Notifiable, Auditable, CanBeBanned, HasPermissions, HasRoles;
+    use Notifiable, Auditable, CanBeBanned, HasRoles;
 
     /**
      * The attributes that are mass assignable.
