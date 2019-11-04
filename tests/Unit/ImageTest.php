@@ -7,39 +7,40 @@ use App\Managers\ImageManager;
 use App\Utilities\KuviaFileSystem;
 use App\Utilities\Paths;
 use Spatie\Permission\Exceptions\UnauthorizedException;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tests\TestCase;
 
 class ImageTest extends TestCase
 {
     public function testCreateImage()
     {
-        self::beginTransaction();
         try {
             // Unknown uploader
             $imagePath = $this->imagePath();
             $collage = $this->collage();
             $uploader = $this->uploader();
-            $image = ImageManager::create($imagePath, $collage, $uploader);
-            $this::assertEquals($image->collage_id, $collage->id, 'Image Collage ID');
-            $this::assertEquals($image->uploader_id, $uploader->id, 'Image Uploader ID');
-            $this::assertEquals($image->user_id, null, 'Image Owner ID');
-            $this::assertEquals(file_get_contents($imagePath), KuviaFileSystem::get(Paths::image($image)), 'Uploaded binary matches');
-            KuviaFileSystem::delete(Paths::image($image));
+            $image1 = ImageManager::create($imagePath, $collage, $uploader);
+            $this::assertEquals($image1->collage_id, $collage->id, 'Image Collage ID');
+            $this::assertEquals($image1->uploader_id, $uploader->id, 'Image Uploader ID');
+            $this::assertEquals($image1->user_id, null, 'Image Owner ID');
+            $this::assertEquals(file_get_contents($imagePath), KuviaFileSystem::get(Paths::image($image1)), 'Uploaded binary matches');
 
             // Known Uploader
             $user = $this->user();
-            $image = ImageManager::create($imagePath, $collage, $uploader, $user);
-            $this::assertEquals($image->user_id, $user->id, 'Image Owner ID');
-            KuviaFileSystem::delete(Paths::image($image));
+            $image2 = ImageManager::create($imagePath, $collage, $uploader, $user);
+            $this::assertEquals($image2->user_id, $user->id, 'Image Owner ID');
         } finally {
-            self::rollbackTransaction();
+            if ($image1 ?? null) {
+                KuviaFileSystem::delete(Paths::image($image1));
+            }
+            if ($image2 ?? null) {
+                KuviaFileSystem::delete(Paths::image($image2));
+            }
+            $this->cleanup($image1 ?? null, $image2 ?? null);
         }
     }
 
     public function testShowUploaderImage()
     {
-        self::beginTransaction();
         try {
             // Unapproved Image
             $uploader = $this->uploader();
@@ -59,13 +60,12 @@ class ImageTest extends TestCase
             $shownImage = ImageManager::show($image, $uploader);
             $this::assertEquals(null, $shownImage->id ?? null, 'Image ID');
         } finally {
-            self::rollbackTransaction();
+            $this->cleanup();
         }
     }
 
     public function testShowUserImage()
     {
-        self::beginTransaction();
         try {
             // Unapproved Image
             $user = $this->user();
@@ -85,13 +85,12 @@ class ImageTest extends TestCase
             $shownImage = ImageManager::show($image, $user);
             $this::assertEquals(null, $shownImage->id ?? null, 'Image ID');
         } finally {
-            self::rollbackTransaction();
+            $this->cleanup();
         }
     }
 
     public function testListUploaderImages()
     {
-        self::beginTransaction();
         try {
             // Can see my own images
             $uploader = $this->uploader();
@@ -112,13 +111,12 @@ class ImageTest extends TestCase
             $shownImages = ImageManager::list([], $user);
             $this->assertEquals(3, count($shownImages->items()), "Admin can see any user's images");
         } finally {
-            self::rollbackTransaction();
+            $this->cleanup();
         }
     }
 
     public function testListUserImages()
     {
-        self::beginTransaction();
         try {
             // Can see my own images
             $user = $this->user();
@@ -139,13 +137,12 @@ class ImageTest extends TestCase
             $shownImages = ImageManager::list([], $user);
             $this->assertEquals(3, count($shownImages->items()), "Admin can see any user's images");
         } finally {
-            self::rollbackTransaction();
+            $this->cleanup();
         }
     }
 
     public function testLDeleteUploaderImage()
     {
-        self::beginTransaction();
         try {
             // Can delete my image
             $imagePath = $this->imagePath();
@@ -166,13 +163,12 @@ class ImageTest extends TestCase
             $user->assignRole(ConstUser::ROLE_ADMIN);
             ImageManager::delete($otherUploadersImage, $uploader);
         } finally {
-            self::rollbackTransaction();
+            $this->cleanup();
         }
     }
 
     public function testLDeleteUserImage()
     {
-        self::beginTransaction();
         try {
             // Can delete my image
             $user = $this->user();
@@ -189,7 +185,7 @@ class ImageTest extends TestCase
             $user->assignRole(ConstUser::ROLE_ADMIN);
             ImageManager::delete($otherUsersImage, $user);
         } finally {
-            self::rollbackTransaction();
+            $this->cleanup();
         }
     }
 }

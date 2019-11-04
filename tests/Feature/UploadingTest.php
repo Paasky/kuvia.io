@@ -17,7 +17,6 @@ class UploadingTest extends TestCase
 
     public function testCreateWithAutoApproveThenUploadThenList()
     {
-        self::beginTransaction();
         try {
             $collage = $this->collage();
             $collage->is_auto_approve = true;
@@ -28,16 +27,16 @@ class UploadingTest extends TestCase
             $this->assertEquals(Carbon::now()->toDateString(), $image->approved_at->toDateString(), 'Image was approved today');
             $this->assertEquals(1, count($collage->images), 'Collage has one image');
             $this->assertEquals($image->id, $collage->images[0]->id, 'Image ID matches');
-
-            KuviaFileSystem::delete(Paths::image($image));
         } finally {
-            self::rollbackTransaction();
+            if ($image ?? null) {
+                KuviaFileSystem::delete(Paths::image($image));
+            }
+            $this->cleanup($image ?? null);
         }
     }
 
     public function testCreateThenUploadThenApproveThenDeclineThenApprove()
     {
-        self::beginTransaction();
         try {
             $collage = $this->collage();
             $imagePath = $this->imagePath();
@@ -59,16 +58,16 @@ class UploadingTest extends TestCase
             $this->assertNull($image->declined_at, 'Image is no longer declined');
             $this->assertEquals(1, $collage->images()->count(), 'Collage has one image');
             $this->assertEquals($image->id, $collage->images[0]->id, 'Image ID matches');
-
-            KuviaFileSystem::delete(Paths::image($image));
         } finally {
-            self::rollbackTransaction();
+            if ($image ?? null) {
+                KuviaFileSystem::delete(Paths::image($image));
+            }
+            $this->cleanup($image ?? null);
         }
     }
 
     public function testCreateThenUploadTwoThenApproveBothThenList()
     {
-        self::beginTransaction();
         try {
             $collage = $this->collage();
             $imagePath = $this->imagePath();
@@ -98,17 +97,19 @@ class UploadingTest extends TestCase
             $this->assertEquals(2, $collage->images()->count(), 'Collage has two images');
             $this->assertEquals($image1->id, $collage->images[0]->id, 'Image 1 ID matches');
             $this->assertEquals($image2->id, $collage->images[1]->id, 'Image 2 ID matches');
-
-            KuviaFileSystem::delete(Paths::image($image1));
-            KuviaFileSystem::delete(Paths::image($image2));
         } finally {
-            self::rollbackTransaction();
+            if ($image1 ?? null) {
+                KuviaFileSystem::delete(Paths::image($image1));
+            }
+            if ($image2 ?? null) {
+                KuviaFileSystem::delete(Paths::image($image2));
+            }
+            $this->cleanup($image1 ?? null, $image2 ?? null);
         }
     }
 
     public function testCreateThenUploadTwoThenDeclineBoth()
     {
-        self::beginTransaction();
         try {
             $collage = $this->collage();
             $imagePath = $this->imagePath();
@@ -131,11 +132,14 @@ class UploadingTest extends TestCase
             ImageManager::decline($image2, $otherUser);
             $this->assertEquals(Carbon::now()->toDateString(), $image2->declined_at->toDateString(), 'Image 2 was declined today');
             $this->assertEquals(0, $collage->images()->count(), 'Collage has no images');
-
-            KuviaFileSystem::delete(Paths::image($image1));
-            KuviaFileSystem::delete(Paths::image($image2));
         } finally {
-            self::rollbackTransaction();
+            if ($image1 ?? null) {
+                KuviaFileSystem::delete(Paths::image($image1));
+            }
+            if ($image2 ?? null) {
+                KuviaFileSystem::delete(Paths::image($image2));
+            }
+            $this->cleanup($image1 ?? null, $image2 ?? null);
         }
     }
 }

@@ -8,18 +8,33 @@ use App\Models\Image;
 use App\Models\Uploader;
 use App\Traits\ManagesDbTransactions;
 use App\User;
-use Faker\Generator;
-use Faker\Provider\Internet;
 use Faker\Provider\Person;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
     use CreatesApplication, ManagesDbTransactions;
 
+    /** @var Model[] */
+    protected $models = [];
+
+    public function cleanup(?Model ...$extraModels): void
+    {
+        /** @var Model $model */
+        foreach (array_merge($this->models, $extraModels) as $model) {
+            if ($model) {
+                $model->delete();
+            }
+        }
+        $this->models = [];
+    }
+
     public function user(): User
     {
-        return User::create($this->userAttributes());
+        $user = User::create($this->userAttributes());
+        $this->models[] = $user;
+        return $user;
     }
 
     public function userAttributes(string $email = '', string $password = 'test'): array
@@ -39,11 +54,11 @@ abstract class TestCase extends BaseTestCase
     }
 
     /**
-     * @param Collage|null $collage
      * @param Uploader|User|null $uploaderOrUser
+     * @param Collage|null $collage
      * @return Image
      */
-    public function image(Collage $collage = null, $uploaderOrUser = null): Image
+    public function image($uploaderOrUser = null, Collage $collage = null): Image
     {
         if ($uploaderOrUser instanceof Uploader) {
             $uploader = $uploaderOrUser;
@@ -57,7 +72,9 @@ abstract class TestCase extends BaseTestCase
             $user = null;
         }
 
-        return Image::create($this->imageAttributes($collage, $uploader, $user));
+        $image = Image::create($this->imageAttributes($collage, $uploader, $user));
+        $this->models[] = $image;
+        return $image;
     }
 
     public function imageAttributes(Collage $collage = null, Uploader $uploader = null, User $user = null, string $filename = ''): array
@@ -78,7 +95,9 @@ abstract class TestCase extends BaseTestCase
 
     public function collage(User $user = null): Collage
     {
-        return Collage::create($this->collageAttributes($user));
+        $collage = Collage::create($this->collageAttributes($user));
+        $this->models[] = $collage;
+        return $collage;
     }
 
     public function collageAttributes(User $user = null, string $title = 'Test Collage', bool $isAutoApprove = false): array
@@ -92,10 +111,11 @@ abstract class TestCase extends BaseTestCase
         ];
     }
 
-    public function uploader(array $attributes = []): Uploader
+    public function uploader(): Uploader
     {
-        $attributes = $attributes ?: $this->uploaderAttributes();
-        return Uploader::create($attributes);
+        $uploader = Uploader::create($this->uploaderAttributes());
+        $this->models[] = $uploader;
+        return $uploader;
     }
 
     public function uploaderAttributes(User $user = null): array
