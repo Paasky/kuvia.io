@@ -3,12 +3,22 @@
 namespace App\Policies;
 
 use App\Models\Collage;
-use Spatie\Permission\Models\Permission;
+use App\User;
+use Illuminate\Database\Eloquent\Builder;
 
 class CollagesPolicy extends Policy
 {
     /** @var Collage */
     protected $model;
+
+    /**
+     * Identifier of the policy, ex ´collage´
+     * @return string
+     */
+    public static function entity(): string
+    {
+        return 'collage';
+    }
 
     /**
      * Which Model::class does this policy apply to
@@ -22,32 +32,38 @@ class CollagesPolicy extends Policy
 
     /**
      * What Permission is required for
-     *  $this->user to be able to
-     *  $this->>action on
-     *  $this->>model (note this can be a class string (for create) or a model instance (for read/use/update/delete)
-     * @param string $guardName
-     * @return Permission
+     *  {$this->user} to be able to
+     *  {$this->action} on
+     *  {$this->model} (note this can be null (for create) or a model instance (for read/use/update/delete)
+     * @return string
      */
-    public function requiredPermission(string $guardName = 'web'): Permission
+    public function requiredAbility(): string
     {
-        $entity = 'collage';
-        if ($this->model->user_id == $this->user->id) {
-            $relation = self::REL_MY;
-        } else {
-            $relation = self::REL_ANY;
+        $entity = static::entity();
+
+        switch (true) {
+            case $this->model->user_id == $this->user->id:
+                $relation = self::REL_MY;
+                break;
+
+            default:
+                $relation = self::REL_ANY;
         }
 
-        $permission = "$this->action $relation $entity";
+        return "$this->action $relation $entity";
+    }
 
-        $permission = Permission::first([
-            'name' => $permission,
-            'guard_name' => $guardName,
-        ]);
-
-        if (!$permission) {
-            throw new \BadFunctionCallException("Required permission [name $permission, guard_name $guardName] does not exist, please run or update PermissionsSeeder");
+    /**
+     * Add filter into a "list models" query
+     * @param User $user
+     * @return Builder
+     */
+    public static function getListQuery(User $user): Builder
+    {
+        $query = Collage::query();
+        if (!$user->can(self::ACTION_READ . ' ' . self::REL_ANY . ' ' . self::entity())) {
+            $query->where('user_id', $user->id);
         }
-
-        return $permission;
+        return $query;
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Managers;
 
-class FileManager
+class FileManager extends Manager
 {
     public static function collageUploadDir(string $filename = ''): string
     {

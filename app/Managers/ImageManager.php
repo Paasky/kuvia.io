@@ -12,7 +12,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Str;
 use League\Flysystem\FileExistsException;
 
-class ImageManager
+class ImageManager extends Manager
 {
     /**
      * @param string $pathToFile

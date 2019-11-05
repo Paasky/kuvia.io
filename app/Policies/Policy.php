@@ -2,24 +2,21 @@
 
 namespace App\Policies;
 
-use App\Constants\ConstPolicy;
+use App\Constants\ConstPermission;
 use App\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Permission\Models\Permission;
 
-abstract class Policy extends ConstPolicy
+abstract class Policy extends ConstPermission
 {
+    /** @var User */
     protected $user;
+    /** @var string */
     protected $action;
+    /** @var Model */
     protected $model;
 
-    /**
-     * Policy constructor.
-     * @param User $user
-     * @param string $action
-     * @param Model|string $model
-     */
-    public function __construct(User $user, string $action, $model)
+    public function __construct(User $user, string $action, Model $model)
     {
         $this->user = $user;
 
@@ -28,13 +25,14 @@ abstract class Policy extends ConstPolicy
         }
         $this->action = $action;
 
-        if (!is_string($model) && !$model instanceof Model) {
-            throw new \BadFunctionCallException(
-                "Unknown model type:" . gettype($model) . ' > class:' . (@get_class($model) ?: 'no class')
-            );
-        }
         $this->model = $model;
     }
+
+    /**
+     * Identifier of the policy, ex ´collage´
+     * @return string
+     */
+    abstract public static function entity(): string;
 
     /**
      * Which Model::class does this policy apply to
@@ -45,11 +43,17 @@ abstract class Policy extends ConstPolicy
 
     /**
      * What Permission is required for
-     *  $this->>user to be able to
-     *  $this->>action on
-     *  $this->>model (note this can be a class string (for create) or a model instance (for read/use/update/delete)
-     * @param string $guardName
-     * @return Permission
+     *  {$this->user} to be able to
+     *  {$this->action} on
+     *  {$this->model} (note this can be null (for create) or a model instance (for read/use/update/delete)
+     * @return string
      */
-    abstract public function requiredPermission(string $guardName = 'web'): Permission;
+    abstract public function requiredAbility(): string;
+
+    /**
+     * Add filter into a "list models" query
+     * @param User $user
+     * @return Builder
+     */
+    abstract public static function getListQuery(User $user): Builder;
 }

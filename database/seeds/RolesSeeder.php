@@ -1,5 +1,6 @@
 <?php
 
+use App\Constants\ConstPermission;
 use App\Constants\ConstUser;
 use App\User;
 use Illuminate\Database\Seeder;
@@ -10,12 +11,22 @@ class RolesSeeder extends Seeder
     public function run()
     {
         Role::unguard();
-        Role::updateOrCreate(
+        $role = Role::updateOrCreate(
             ['id' => 1],
             [
                 'name' => ConstUser::ROLE_ADMIN,
                 'guard_name' => 'web',
             ]
         );
+        $role->givePermissionTo(ConstPermission::ANYTHING);
+
+        $role = Role::updateOrCreate(
+            ['id' => 2],
+            [
+                'name' => ConstUser::ROLE_USER,
+                'guard_name' => 'web',
+            ]
+        );
+        $role->givePermissionTo(ConstPermission::ANYTHING_MINE);
     }
 }

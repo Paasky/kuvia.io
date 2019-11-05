@@ -4,39 +4,66 @@ namespace App\Managers;
 
 use App\Models\Collage;
 use App\User;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Support\Str;
 
-class CollageManager
+class CollageManager extends Manager
 {
-    public static function create(array $params, User $user = null): Collage
+    public static function create(array $params, User $user): Collage
     {
-        if (!$user) {
-            throw new \BadFunctionCallException("No user given");
-        }
-        $params['user_id'] = $user->id;
+        PermissionManager::can(
+            $user,
+            self::ACTION_CREATE,
+            new Collage(['user_id' => $params['user_id'] ?? $user->id]),
+            true
+        );
+
         $params['slug'] = static::generateSlug($params['title']);
         return Collage::create($params);
     }
 
-    public static function show(Collage $collage, User $user = null): ?Collage
+    public static function show(Collage $collage, User $user): ?Collage
     {
+        PermissionManager::can(
+            $user,
+            self::ACTION_READ,
+            $collage,
+            true
+        );
+
         return $collage;
     }
 
-    public static function list(array $params = [], User $user = null): Paginator
+    public static function list(array $params, User $user): Paginator
     {
-
+        $query = PermissionManager::getListQuery($user, Collage::class);
+        return self::paginator($query, $params);
     }
 
-    public static function disable(Collage &$collage, User $user): void
+    public static function update(Collage &$collage, array $params, User $user): ?Collage
     {
+        PermissionManager::can(
+            $user,
+            self::ACTION_UPDATE,
+            $collage,
+            true
+        );
 
+        $collage->update($params);
+
+        return $collage;
     }
 
     public static function delete(Collage $collage, User $user): void
     {
+        PermissionManager::can(
+            $user,
+            self::ACTION_DELETE,
+            $collage,
+            true
+        );
 
+        $collage->delete();
     }
 
     public static function generateSlug(string $title): string

@@ -4,7 +4,7 @@ namespace App\Managers;
 
 use App\User;
 
-class UserManager
+class UserManager extends Manager
 {
     public static function create(array $params): User
     {
