@@ -19,10 +19,11 @@ class CollageManager extends Manager
         );
 
         $params['slug'] = static::generateSlug($params['title']);
+        $params['shortcode'] = static::generateShortcode();
         return Collage::create($params);
     }
 
-    public static function show(Collage $collage, User $user): ?Collage
+    public static function show(Collage &$collage, User $user): Collage
     {
         PermissionManager::can(
             $user,
@@ -40,7 +41,7 @@ class CollageManager extends Manager
         return self::paginator($query, $params);
     }
 
-    public static function update(Collage &$collage, array $params, User $user): ?Collage
+    public static function update(Collage &$collage, array $params, User $user): void
     {
         PermissionManager::can(
             $user,
@@ -50,8 +51,6 @@ class CollageManager extends Manager
         );
 
         $collage->update($params);
-
-        return $collage;
     }
 
     public static function delete(Collage $collage, User $user): void
